@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// CICLO (Quarter / Semestre)
+// ─────────────────────────────────────────────
+model Cycle {
+  id         String      @id @default(cuid())
+  name       String
+  startDate  DateTime
+  endDate    DateTime
+  status     CycleStatus @default(ACTIVE)
+  objectives Objective[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([status])
+}
+
+enum CycleStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+// ─────────────────────────────────────────────
+// PROFISSIONAL
+// ─────────────────────────────────────────────
+model TeamMember {
+  id         String      @id @default(cuid())
+  name       String
+  role       String?
+  email      String      @unique
+  objectives Objective[]
+  pdis       Pdi[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// OBJETIVO — hierárquico via parentId
+// level: COMPANY | SQUAD | INDIVIDUAL
+// ─────────────────────────────────────────────
+model Objective {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  level       ObjectiveLevel
+  status      ObjectiveStatus @default(DRAFT)
+
+  parentId    String?
+  parent      Objective?      @relation("ObjectiveChildren", fields: [parentId], references: [id])
+  children    Objective[]     @relation("ObjectiveChildren")
+
+  ownerId     String?
+  owner       TeamMember?     @relation(fields: [ownerId], references: [id])
+
+  cycleId     String
+  cycle       Cycle           @relation(fields: [cycleId], references: [id])
+
+  keyResults  KeyResult[]
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([cycleId])
+  @@index([parentId])
+  @@index([level, status])
+}
+
+enum ObjectiveLevel {
+  COMPANY
+  SQUAD
+  INDIVIDUAL
+}
+
+enum ObjectiveStatus {
+  DRAFT
+  ACTIVE
+  AT_RISK
+  COMPLETED
+  CANCELLED
+}
+
+// ─────────────────────────────────────────────
+// RESULTADO-CHAVE
+// ─────────────────────────────────────────────
+model KeyResult {
+  id              String     @id @default(cuid())
+  title           String
+  metricType      MetricType @default(PERCENTAGE)
+  startValue      Float      @default(0)
+  targetValue     Float
+  currentValue    Float      @default(0)
+  unit            String?
+  status          KrStatus   @default(ON_TRACK)
+  confidenceScore Int?
+
+  objectiveId     String
+  objective       Objective  @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  checkIns        CheckIn[]
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([objectiveId])
+  @@index([status])
+}
+
+enum MetricType {
+  PERCENTAGE
+  NUMBER
+  CURRENCY
+  BOOLEAN
+}
+
+enum KrStatus {
+  ON_TRACK
+  AT_RISK
+  BEHIND
+  COMPLETED
+}
+
+// ─────────────────────────────────────────────
+// CHECK-IN — histórico de progresso do KR
+// ─────────────────────────────────────────────
+model CheckIn {
+  id           String    @id @default(cuid())
+  value        Float
+  note         String?
+  confidence   Int?
+
+  keyResultId  String
+  keyResult    KeyResult @relation(fields: [keyResultId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime  @default(now())
+
+  @@index([keyResultId, createdAt])
+}
+
+// ─────────────────────────────────────────────
+// PDI — Plano de Desenvolvimento Individual
+// ─────────────────────────────────────────────
+model Pdi {
+  id         String    @id @default(cuid())
+  title      String
+  cycleStart DateTime
+  cycleEnd   DateTime
+  status     PdiStatus @default(ACTIVE)
+  summary    String?
+
+  memberId   String
+  member     TeamMember @relation(fields: [memberId], references: [id])
+
+  items      PdiItem[]
+  notes      PdiNote[]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([memberId])
+  @@index([status])
+}
+
+enum PdiStatus {
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+}
+
+// ─────────────────────────────────────────────
+// PDI ITEM — ação/meta de desenvolvimento
+// ─────────────────────────────────────────────
+model PdiItem {
+  id            String        @id @default(cuid())
+  title         String
+  description   String?
+  skillArea     String?
+  resourceUrl   String?
+  resourceType  ResourceType?
+  targetDate    DateTime?
+  completedDate DateTime?
+  status        PdiItemStatus @default(PENDING)
+  priority      Int           @default(1)
+
+  pdiId         String
+  pdi           Pdi           @relation(fields: [pdiId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([pdiId])
+  @@index([status])
+}
+
+enum PdiItemStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DROPPED
+}
+
+enum ResourceType {
+  COURSE
+  BOOK
+  ARTICLE
+  VIDEO
+  MENTORING
+  PROJECT
+  OTHER
+}
+
+// ─────────────────────────────────────────────
+// PDI NOTE — anotações periódicas do gestor
+// ─────────────────────────────────────────────
+model PdiNote {
+  id        String   @id @default(cuid())
+  content   String
+  pdiId     String
+  pdi       Pdi      @relation(fields: [pdiId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([pdiId])
+}

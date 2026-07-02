@@ -1,29 +1,25 @@
 {
+  "pattern": "hexagonal",
   "layers": {
     "domain": {
-      "pattern": "src/domain/",
-      "allowedImportPrefixes": ["src/domain/", "src/shared/"],
+      "pattern": "src/modules/*/domain/**",
+      "allowedImportPrefixes": [],
       "description": "Pure business logic — zero external dependencies"
     },
     "application": {
-      "pattern": "src/application/",
-      "allowedImportPrefixes": ["src/domain/", "src/ports/", "src/shared/"],
+      "pattern": "src/modules/*/application/**",
+      "allowedImportPrefixes": ["@/modules/"],
       "description": "Use cases — depends on domain and port interfaces only"
     },
-    "ports": {
-      "pattern": "src/ports/",
-      "allowedImportPrefixes": ["src/domain/"],
-      "description": "Interface contracts (inbound + outbound)"
-    },
     "infrastructure": {
-      "pattern": "src/infrastructure/",
-      "allowedImportPrefixes": ["src/domain/", "src/application/", "src/ports/", "src/shared/"],
-      "description": "Adapters implementing ports"
+      "pattern": "src/modules/*/infrastructure/**",
+      "allowedImportPrefixes": ["@/modules/", "@/lib/"],
+      "description": "Adapters implementing ports (Prisma, HTTP, etc)"
     },
-    "shared": {
-      "pattern": "src/shared/",
-      "allowedImportPrefixes": [],
-      "description": "Cross-cutting concerns — no business logic allowed"
+    "presentation": {
+      "pattern": "src/app/**",
+      "allowedImportPrefixes": ["@/modules/", "@/components/", "@/lib/"],
+      "description": "Next.js App Router — Server Components + Server Actions"
     }
   },
   "testMapping": {
