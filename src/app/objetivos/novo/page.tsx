@@ -19,9 +19,14 @@ export default async function NovoObjetivoPage() {
   ])
 
   const activeCycle = cycles.find((c) => c.status === 'ACTIVE')
-  const companyObjectives = activeCycle
-    ? await objectiveRepo.findByLevel(activeCycle.id, 'COMPANY')
+
+  // Todos os objetivos do ciclo ativo como opções de pai (Company → pai de Squad, Squad → pai de Individual)
+  const parentOptions = activeCycle
+    ? await objectiveRepo.findByCycle(activeCycle.id)
     : []
+
+  const companyParents  = parentOptions.filter((o) => o.level === 'COMPANY')
+  const squadParents    = parentOptions.filter((o) => o.level === 'SQUAD')
 
   return (
     <div className="max-w-lg space-y-6">
@@ -55,14 +60,25 @@ export default async function NovoObjetivoPage() {
             ))}
           </select>
         </div>
-        {companyObjectives.length > 0 && (
+        {parentOptions.length > 0 && (
           <div>
             <Label htmlFor="parentId">Objetivo pai (cascade)</Label>
             <select name="parentId" id="parentId" className="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm bg-white">
               <option value="">— Nenhum (objetivo raiz) —</option>
-              {companyObjectives.map((o) => (
-                <option key={o.id} value={o.id}>{o.title}</option>
-              ))}
+              {companyParents.length > 0 && (
+                <optgroup label="Empresa">
+                  {companyParents.map((o) => (
+                    <option key={o.id} value={o.id}>{o.title}</option>
+                  ))}
+                </optgroup>
+              )}
+              {squadParents.length > 0 && (
+                <optgroup label="Squad">
+                  {squadParents.map((o) => (
+                    <option key={o.id} value={o.id}>{o.title}</option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
         )}
