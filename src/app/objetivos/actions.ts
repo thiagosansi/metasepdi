@@ -12,6 +12,20 @@ import type { ObjectiveLevel } from '@/modules/okr/domain/Objective'
 const objectiveRepo = new PrismaObjectiveRepository()
 const krRepo = new PrismaKeyResultRepository()
 
+export async function updateObjective(formData: FormData) {
+  const id = formData.get('id') as string
+  await objectiveRepo.update(id, {
+    title: formData.get('title') as string,
+    description: (formData.get('description') as string) || undefined,
+    level: formData.get('level') as ObjectiveLevel,
+    parentId: (formData.get('parentId') as string) || undefined,
+    ownerId: (formData.get('ownerId') as string) || undefined,
+  })
+  revalidatePath('/objetivos')
+  revalidatePath('/dashboard')
+  redirect('/objetivos')
+}
+
 export async function createObjective(formData: FormData) {
   const useCase = new CreateObjectiveUseCase(objectiveRepo)
   await useCase.execute({

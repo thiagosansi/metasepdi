@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { Pencil } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { StatusBadge } from './StatusBadge'
 import { ProgressBar } from './ProgressBar'
@@ -44,6 +46,13 @@ export function ObjectiveCard({ objective }: ObjectiveCardProps) {
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-sm font-semibold text-slate-700">{overallProgress}%</span>
             <StatusBadge status={objective.status as 'DRAFT' | 'ACTIVE' | 'AT_RISK' | 'COMPLETED' | 'CANCELLED'} />
+            <Link
+              href={`/objetivos/${objective.id}/editar`}
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              title="Editar objetivo"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
         {objective.description && (
