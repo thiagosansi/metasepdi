@@ -18,15 +18,17 @@ export default async function NovoObjetivoPage() {
     memberRepo.findAll(),
   ])
 
-  const activeCycle = cycles.find((c) => c.status === 'ACTIVE')
+  // Ciclos fechados não devem receber novos objetivos
+  const openCycles = cycles.filter((c) => c.status !== 'CLOSED')
+  const activeCycle = openCycles.find((c) => c.status === 'ACTIVE') ?? openCycles[0]
 
-  // Todos os objetivos do ciclo ativo como opções de pai (Company → pai de Squad, Squad → pai de Individual)
+  // Pais disponíveis somente do ciclo ativo/aberto selecionado
   const parentOptions = activeCycle
     ? await objectiveRepo.findByCycle(activeCycle.id)
     : []
 
-  const companyParents  = parentOptions.filter((o) => o.level === 'COMPANY')
-  const squadParents    = parentOptions.filter((o) => o.level === 'SQUAD')
+  const companyParents = parentOptions.filter((o) => o.level === 'COMPANY')
+  const squadParents   = parentOptions.filter((o) => o.level === 'SQUAD')
 
   return (
     <div className="max-w-lg space-y-6">
@@ -55,8 +57,8 @@ export default async function NovoObjetivoPage() {
         <div>
           <Label htmlFor="cycleId">Ciclo</Label>
           <select name="cycleId" id="cycleId" className="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm bg-white" required>
-            {cycles.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+            {openCycles.map((c) => (
+              <option key={c.id} value={c.id} selected={c.id === activeCycle?.id}>{c.name}</option>
             ))}
           </select>
         </div>
