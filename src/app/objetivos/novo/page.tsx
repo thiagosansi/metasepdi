@@ -62,28 +62,31 @@ export default async function NovoObjetivoPage() {
             ))}
           </select>
         </div>
-        {parentOptions.length > 0 && (
-          <div>
-            <Label htmlFor="parentId">Objetivo pai (cascade)</Label>
-            <select name="parentId" id="parentId" className="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm bg-white">
-              <option value="">— Nenhum (objetivo raiz) —</option>
-              {companyParents.length > 0 && (
-                <optgroup label="Empresa">
-                  {companyParents.map((o) => (
-                    <option key={o.id} value={o.id}>{o.title}</option>
-                  ))}
-                </optgroup>
-              )}
-              {squadParents.length > 0 && (
-                <optgroup label="Squad">
-                  {squadParents.map((o) => (
-                    <option key={o.id} value={o.id}>{o.title}</option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-          </div>
-        )}
+        <div>
+          <Label htmlFor="parentId">Objetivo pai (cascade)</Label>
+          <select name="parentId" id="parentId" className="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm bg-white">
+            <option value="">— Nenhum (objetivo raiz) —</option>
+            {companyParents.length > 0 && (
+              <optgroup label="Empresa">
+                {companyParents.map((o) => (
+                  <option key={o.id} value={o.id}>{o.title}</option>
+                ))}
+              </optgroup>
+            )}
+            {squadParents.length > 0 && (
+              <optgroup label="Squad">
+                {squadParents.map((o) => (
+                  <option key={o.id} value={o.id}>{o.title}</option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+          {parentOptions.length === 0 && (
+            <p className="mt-1 text-xs text-slate-400">
+              Crie primeiro um objetivo de Empresa para vincular objetivos de Squad e Individual.
+            </p>
+          )}
+        </div>
         {members.length > 0 && (
           <div>
             <Label htmlFor="ownerId">Responsável (opcional)</Label>
